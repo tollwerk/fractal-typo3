@@ -7,6 +7,7 @@ const execFileSync = require('child_process').execFileSync;
 const slug = require('slug');
 const mkdirp = require('mkdirp').sync;
 var app;
+var typo3path = null;
 
 /**
  * Process a component
@@ -112,6 +113,7 @@ function configureComponent(configPath, component) {
 		name: variant,
 		context: {
 			config: component.config,
+			parameters: component.parameters || {},
 			request: component.request,
 			component: component.class
 		}
@@ -129,20 +131,21 @@ function configureComponent(configPath, component) {
  */
 var update = function (args, done) {
 	app = this.fractal;
-	const typo3cli = path.join(args.typo3path, 'typo3/cli_dispatch.phpsh');
+	const t3path = args.typo3path || typo3path;
+	const typo3cli = path.join(t3path, 'typo3/cli_dispatch.phpsh');
 
 	try {
 		if (fs.statSync(typo3cli).isFile()) {
 			var components = JSON.parse(execFileSync(
 				'php',
-				[path.resolve(args.typo3path, 'typo3/cli_dispatch.phpsh'), 'extbase', 'component:discover']
+				[path.resolve(t3path, 'typo3/cli_dispatch.phpsh'), 'extbase', 'component:discover']
 			).toString());
 			for (let component of components) {
 				processComponent(component);
 			}
 
 			// Write the general shared context
-			var context = {context: {typo3: path.resolve(args.typo3path)}};
+			var context = {context: {typo3: path.resolve(t3path)}};
 			fs.writeFileSync(
 				path.resolve(app.components.get('path'), 'components.config.json'),
 				JSON.stringify(context, null, 4)
@@ -154,6 +157,15 @@ var update = function (args, done) {
 		done(e);
 	}
 };
+
+/**
+ * Configure the TYPO3 default path
+ *
+ * @param {String} t3path TYPO3 default path
+ */
+var configure = function(t3path) {
+	typo3path = t3path;
+}
 
 /**
  * TYPO3 template rendering engine
@@ -179,5 +191,6 @@ var engine = function () {
 
 module.exports = {
 	update: update,
-	engine: engine
+	engine: engine,
+	configure: configure
 }
