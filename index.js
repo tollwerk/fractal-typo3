@@ -15,8 +15,9 @@ let app;
  *
  * @param {String} configPath Component configuration path
  * @param {Object} component Component properties
+ * @param {String} componentPath Component path
  */
-function configureComponent(configPath, component) {
+function configureComponent(configPath, component, componentPath) {
     let config;
     try {
         config = require(configPath);
@@ -25,8 +26,12 @@ function configureComponent(configPath, component) {
         if (!component.variant) {
             config.title = component.name;
             config.status = component.status;
+            config.context = config.context || {};
             config.context.type = component.type;
         }
+
+        config.variants = config.variants || [];
+
     } catch (e) {
         config = {
             title: component.name,
@@ -36,6 +41,11 @@ function configureComponent(configPath, component) {
             },
             variants: [],
         };
+    }
+
+    // Register the preview component
+    if (component.preview) {
+        config.preview = `@${[...componentPath, slug(component.name, { lower: true }), 'preview'].join('-')}`;
     }
 
     // Remove the variant if already present
@@ -58,6 +68,50 @@ function configureComponent(configPath, component) {
 }
 
 /**
+ * Create and pre-configure a directory
+ *
+ * @param {String} dirPrefix Path prefix
+ * @param {Array} dirPath Directory path
+ * @return {boolean} Directory been created and pre-configured
+ */
+function createCollection(dirPrefix, dirPath) {
+    const dir = dirPath.shift();
+    const absDir = path.join(dirPrefix, dir);
+
+    console.log('Creating ' + absDir);
+
+    // Create the collection directory
+    try {
+        if (!fs.statSync(absDir).isDirectory()) {
+            throw new Error('1');
+        }
+    } catch (e) {
+        try {
+            if (!mkdirp(absDir)) {
+                throw new Error('2');
+            }
+        } catch (f) {
+            return false;
+        }
+    }
+
+    // Configure the collection prefix
+    const configPath = path.join(absDir, `${dir}.config.json`);
+    const prefix = path.relative(app.components.get('path'), absDir).split(path.sep).join('-');
+    let config;
+    try {
+        config = require(configPath);
+        config.prefix = prefix;
+    } catch (e) {
+        config = { prefix };
+    }
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 4));
+
+    // Recurse
+    return dirPath.length ? createCollection(absDir, dirPath) : true;
+}
+
+/**
  * Register a component
  *
  * @param {Object} component Component
@@ -65,35 +119,44 @@ function configureComponent(configPath, component) {
 function registerComponent(component) {
     const componentName = slug(component.name, { lower: true });
     const componentPath = component.path.slice(0).map(p => slug(p, { lower: true }));
-    const componentDirectory = path.join(app.components.get('path'), path.join.apply(null, componentPath), componentName);
+    const componentParent = path.join(app.components.get('path'), ...componentPath);
+    const componentDirectory = path.join(componentParent, componentName);
 
     // Create the component directory
-    try {
-        if (!fs.statSync(componentDirectory).isDirectory()) {
-            throw new Error(`Could not create component directory ${componentDirectory}`);
-        }
-    } catch (e) {
-        if (!mkdirp(componentDirectory)) {
-            throw new Error(`Could not create component directory ${componentDirectory}`);
-        }
-    }
-    if (!fs.statSync(componentDirectory).isDirectory() && !mkdirp(componentDirectory)) {
+    if (!createCollection(app.components.get('path'), [...componentPath, componentName])) {
         throw new Error(`Could not create component directory ${componentDirectory}`);
     }
+    // try {
+    //     if (!fs.statSync(componentDirectory).isDirectory()) {
+    //         throw new Error(`Could not create component directory ${componentDirectory}`);
+    //     }
+    // } catch (e) {
+    //     // if (!mkdirp(componentDirectory)) {
+    //     if (!createCollection(app.components.get('path'), [...componentPath, componentName])) {
+    //         throw new Error(`Could not create component directory ${componentDirectory}`);
+    //     }
+    // }
+    // if (!fs.statSync(componentDirectory).isDirectory() && !mkdirp(componentDirectory)) {
+    //     throw new Error(`Could not create component directory ${componentDirectory}`);
+    // }
 
     // Write out the template file
     const componentVariantName = componentName + (component.variant ? `--${slug(component.variant, { lower: true })}` : '');
     const componentTemplate = path.join(componentDirectory, `${componentVariantName}.${component.extension}`);
     fs.writeFileSync(componentTemplate, component.template);
 
+    // Write out the preview template
+    if (component.preview) {
+        fs.writeFileSync(path.join(componentParent, `_${componentName}-preview.t3s`), component.preview);
+    }
+
     // Write out the README file
     if (component.notice) {
-        const componentNotice = path.join(componentDirectory, 'README.md');
-        fs.writeFileSync(componentNotice, component.notice);
+        fs.writeFileSync(path.join(componentDirectory, 'README.md'), component.notice);
     }
 
     // Configure the component
-    configureComponent(path.join(componentDirectory, `${componentName}.config.json`), component);
+    configureComponent(path.join(componentDirectory, `${componentName}.config.json`), component, componentPath);
 }
 
 /**
@@ -174,8 +237,12 @@ class TYPO3Adapter extends Adapter {
  */
 const engine = function engine() {
     return {
-        register(source) { // , app
-            return new TYPO3Adapter(require('./lib/typo3.js'), source);
+        register(source, gapp) {
+            const typo3Engine = require('./lib/typo3.js');
+            const handlebars = require('@frctl/handlebars');
+            typo3Engine.handlebars = handlebars({}).register(source, gapp);
+            typo3Engine.handlebars.load();
+            return new TYPO3Adapter(typo3Engine, source); // , gapp
         },
     };
 };
