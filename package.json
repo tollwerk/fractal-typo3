@@ -14,8 +14,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "test": "istanbul test _mocha --report html -- test/*.js --reporter spec",
-    "lint": "jshint bin && jshint lib && jshint test"
+    "lint": "eslint **/*.js"
   },
   "files": [
     "lib"
@@ -28,5 +27,12 @@
     "@frctl/fractal": "^1.0.11",
     "mkdirp": "^0.5.1",
     "slug": "^0.9.1"
+  },
+  "devDependencies": {
+    "eslint": "^3.13.1",
+    "eslint-config-airbnb": "^14.0.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "3.0.2",
+    "eslint-plugin-react": "^6.9.0"
   }
 }

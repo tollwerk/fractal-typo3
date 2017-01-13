@@ -1,4 +1,4 @@
-'use strict';
+/* eslint-disable global-require, import/no-dynamic-require, no-console */
 
 const Adapter = require('@frctl/fractal').Adapter;
 const path = require('path');
@@ -6,73 +6,9 @@ const fs = require('fs');
 const execFileSync = require('child_process').execFileSync;
 const slug = require('slug');
 const mkdirp = require('mkdirp').sync;
-var app;
-var typo3path = null;
 
-/**
- * Process a component
- *
- * @param {Object} component Component
- */
-function processComponent(component) {
-	var name = component.name;
-	if (component.variant) {
-		name += ' (' + component.variant + ')';
-	}
-	var pathName = component.path.slice(0);
-	pathName.push(name);
-
-	// If the component is invalid
-	if (!component.valid) {
-		console.log('Skipping invalid component: ' + pathName.join('/'));
-		return;
-	}
-
-	console.log('Creating component: ' + pathName.join('/'));
-	registerComponent(component);
-}
-
-/**
- * Register a component
- *
- * @param {Object} component Component
- */
-function registerComponent(component) {
-	var componentName = slug(component.name, {lower: true});
-	var componentPath = component.path.slice(0).map(function (p) {
-		return slug(p, {lower: true})
-	});
-	var componentDirectory = path.join(app.components.get('path'), path.join.apply(null, componentPath), componentName);
-
-	// Create the component directory
-	try {
-		var dirStats = fs.statSync(componentDirectory);
-		if (!dirStats.isDirectory()) {
-			throw new Error('Could not create component directory ' + componentDirectory);
-		}
-	} catch (e) {
-		if (!mkdirp(componentDirectory)) {
-			throw new Error('Could not create component directory ' + componentDirectory);
-		}
-	}
-	if (!fs.statSync(componentDirectory).isDirectory() && !mkdirp(componentDirectory)) {
-		throw new Error('Could not create component directory ' + componentDirectory);
-	}
-
-	// Write out the template file
-	var componentVariantName = componentName + (component.variant ? '--' + slug(component.variant, {lower: true}) : '');
-	var componentTemplate = path.join(componentDirectory, componentVariantName + '.' + component.extension);
-	fs.writeFileSync(componentTemplate, component.template);
-
-	// Write out the README file
-	if (component.notice) {
-		var componentNotice = path.join(componentDirectory, 'README.md');
-		fs.writeFileSync(componentNotice, component.notice);
-	}
-
-	// Configure the component
-	configureComponent(path.join(componentDirectory, componentName + '.' + 'config.json'), component);
-}
+let typo3path = null;
+let app;
 
 /**
  * Configure a component
@@ -81,46 +17,106 @@ function registerComponent(component) {
  * @param {Object} component Component properties
  */
 function configureComponent(configPath, component) {
-	var config;
-	try {
-		config = require(configPath);
+    let config;
+    try {
+        config = require(configPath);
 
-		// If this is the default variant
-		if (!component.variant) {
-			config.title = component.name;
-			config.status = component.status;
-			config.context.type = component.type;
-		}
-	} catch (e) {
-		config = {
-			title: component.name,
-			status: component.status,
-			context: {
-				type: component.type
-			},
-			variants: []
-		};
-	}
+        // If this is the default variant
+        if (!component.variant) {
+            config.title = component.name;
+            config.status = component.status;
+            config.context.type = component.type;
+        }
+    } catch (e) {
+        config = {
+            title: component.name,
+            status: component.status,
+            context: {
+                type: component.type,
+            },
+            variants: [],
+        };
+    }
 
-	// Remove the variant if already present
-	var variant = component.variant || 'default';
-	config.variants = config.variants.filter(function (vt) {
-		return vt.name !== variant;
-	});
+    // Remove the variant if already present
+    const variant = component.variant || 'default';
+    config.variants = config.variants.filter(vt => vt.name !== variant);
 
-	// Register the variant
-	config.variants.push({
-		name: variant,
-		context: {
-			config: component.config,
-			parameters: component.parameters || {},
-			request: component.request,
-			component: component.class
-		}
-	});
+    // Register the variant
+    config.variants.push({
+        name: variant,
+        context: {
+            config: component.config,
+            parameters: component.parameters || {},
+            request: component.request,
+            component: component.class,
+        },
+    });
 
-	// Write the configuration file
-	fs.writeFileSync(configPath, JSON.stringify(config, null, 4));
+    // Write the configuration file
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 4));
+}
+
+/**
+ * Register a component
+ *
+ * @param {Object} component Component
+ */
+function registerComponent(component) {
+    const componentName = slug(component.name, { lower: true });
+    const componentPath = component.path.slice(0).map(p => slug(p, { lower: true }));
+    const componentDirectory = path.join(app.components.get('path'), path.join.apply(null, componentPath), componentName);
+
+    // Create the component directory
+    try {
+        if (!fs.statSync(componentDirectory).isDirectory()) {
+            throw new Error(`Could not create component directory ${componentDirectory}`);
+        }
+    } catch (e) {
+        if (!mkdirp(componentDirectory)) {
+            throw new Error(`Could not create component directory ${componentDirectory}`);
+        }
+    }
+    if (!fs.statSync(componentDirectory).isDirectory() && !mkdirp(componentDirectory)) {
+        throw new Error(`Could not create component directory ${componentDirectory}`);
+    }
+
+    // Write out the template file
+    const componentVariantName = componentName + (component.variant ? `--${slug(component.variant, { lower: true })}` : '');
+    const componentTemplate = path.join(componentDirectory, `${componentVariantName}.${component.extension}`);
+    fs.writeFileSync(componentTemplate, component.template);
+
+    // Write out the README file
+    if (component.notice) {
+        const componentNotice = path.join(componentDirectory, 'README.md');
+        fs.writeFileSync(componentNotice, component.notice);
+    }
+
+    // Configure the component
+    configureComponent(path.join(componentDirectory, `${componentName}.config.json`), component);
+}
+
+/**
+ * Process a component
+ *
+ * @param {Object} component Component
+ */
+function processComponent(component) {
+    let name = component.name;
+    if (component.variant) {
+        name += ` (${component.variant})`;
+    }
+    const pathName = component.path.slice(0);
+    pathName.push(name);
+
+    // If the component is invalid
+    if (!component.valid) {
+        console.log(`Skipping invalid component: ${pathName.join('/')}`);
+        return;
+    }
+
+    console.log(`Creating component: ${pathName.join('/')}`);
+    registerComponent(component);
 }
 
 /**
@@ -129,33 +125,28 @@ function configureComponent(configPath, component) {
  * @param {Array} args Arguments
  * @param {Function} done Callback
  */
-var update = function (args, done) {
-	app = this.fractal;
-	const t3path = args.typo3path || typo3path;
-	const typo3cli = path.join(t3path, 'typo3/cli_dispatch.phpsh');
+const update = function update(args, done) {
+    app = this.fractal;
+    const t3path = args.typo3path || typo3path;
+    const typo3cli = path.join(t3path, 'typo3/cli_dispatch.phpsh');
 
-	try {
-		if (fs.statSync(typo3cli).isFile()) {
-			var components = JSON.parse(execFileSync(
-				'php',
-				[path.resolve(t3path, 'typo3/cli_dispatch.phpsh'), 'extbase', 'component:discover']
-			).toString());
-			for (let component of components) {
-				processComponent(component);
-			}
+    try {
+        if (fs.statSync(typo3cli).isFile()) {
+            const components = JSON.parse(
+                execFileSync('php', [path.resolve(t3path, 'typo3/cli_dispatch.phpsh'), 'extbase', 'component:discover']).toString());
+            for (const component of components) {
+                processComponent(component);
+            }
 
-			// Write the general shared context
-			var context = {context: {typo3: path.resolve(t3path)}};
-			fs.writeFileSync(
-				path.resolve(app.components.get('path'), 'components.config.json'),
-				JSON.stringify(context, null, 4)
-			);
-		}
-		done();
-	} catch (e) {
-		console.log(e);
-		done(e);
-	}
+            // Write the general shared context
+            const context = { context: { typo3: path.resolve(t3path) } };
+            fs.writeFileSync(path.resolve(app.components.get('path'), 'components.config.json'), JSON.stringify(context, null, 4));
+        }
+        done();
+    } catch (e) {
+        console.log(e);
+        done(e);
+    }
 };
 
 /**
@@ -163,34 +154,34 @@ var update = function (args, done) {
  *
  * @param {String} t3path TYPO3 default path
  */
-var configure = function(t3path) {
-	typo3path = t3path;
-}
+const configure = function configure(t3path) {
+    typo3path = t3path;
+};
 
 /**
  * TYPO3 template rendering engine
  */
 class TYPO3Adapter extends Adapter {
-	render(path, str, context, meta) {
-		let views = {};
-		this.views.forEach(view => (views[view.handle] = view.content));
-		return Promise.resolve(this.engine.render(str, context, views));
-	}
+    render(componentPath, str, context) { // , meta
+        const views = {};
+        this.views.forEach(view => (views[view.handle] = view.content));
+        return Promise.resolve(this.engine.render(str, context, views));
+    }
 }
 
 /**
  * TYPO3 template engine
  */
-var engine = function () {
-	return {
-		register(source, app) {
-			return new TYPO3Adapter(require('./lib/typo3.js'), source);
-		}
-	}
-}
+const engine = function engine() {
+    return {
+        register(source) { // , app
+            return new TYPO3Adapter(require('./lib/typo3.js'), source);
+        },
+    };
+};
 
 module.exports = {
-	update: update,
-	engine: engine,
-	configure: configure
-}
+    update,
+    engine,
+    configure,
+};
