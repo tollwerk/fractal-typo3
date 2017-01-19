@@ -55,6 +55,7 @@ function configureComponent(configPath, component, componentPath) {
     // Register the variant
     config.variants.push({
         name: variant,
+        label: component.label || ((variant === 'default') ? component.name : variant),
         context: {
             config: component.config,
             parameters: component.parameters || {},
@@ -62,6 +63,16 @@ function configureComponent(configPath, component, componentPath) {
             component: component.class,
         },
     });
+
+    config.variants = config.variants.sort((a, b) => {
+        const aName = a.label.toLowerCase();
+        const bName = b.label.toLowerCase();
+        if (aName > bName) {
+            return 1;
+        }
+        return (aName < bName) ? -1 : 0;
+    });
+    config.variants.forEach((v, i) => v.order = i);
 
     // Write the configuration file
     fs.writeFileSync(configPath, JSON.stringify(config, null, 4));
@@ -126,19 +137,6 @@ function registerComponent(component) {
     if (!createCollection(app.components.get('path'), [...componentPath, componentName])) {
         throw new Error(`Could not create component directory ${componentDirectory}`);
     }
-    // try {
-    //     if (!fs.statSync(componentDirectory).isDirectory()) {
-    //         throw new Error(`Could not create component directory ${componentDirectory}`);
-    //     }
-    // } catch (e) {
-    //     // if (!mkdirp(componentDirectory)) {
-    //     if (!createCollection(app.components.get('path'), [...componentPath, componentName])) {
-    //         throw new Error(`Could not create component directory ${componentDirectory}`);
-    //     }
-    // }
-    // if (!fs.statSync(componentDirectory).isDirectory() && !mkdirp(componentDirectory)) {
-    //     throw new Error(`Could not create component directory ${componentDirectory}`);
-    // }
 
     // Write out the template file
     const componentVariantName = componentName + (component.variant ? `--${slug(component.variant, { lower: true })}` : '');
