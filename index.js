@@ -62,6 +62,7 @@ function configureComponent(configPath, component, componentPath) {
             request: component.request,
             component: component.class,
         },
+        notes: component.notice || ''
     });
 
     config.variants = config.variants.sort((a, b) => {
@@ -146,11 +147,6 @@ function registerComponent(component) {
     // Write out the preview template
     if (component.preview) {
         fs.writeFileSync(path.join(componentParent, `_${componentName}-preview.t3s`), component.preview);
-    }
-
-    // Write out the README file
-    if (component.notice) {
-        fs.writeFileSync(path.join(componentDirectory, 'README.md'), component.notice);
     }
 
     // Configure the component
