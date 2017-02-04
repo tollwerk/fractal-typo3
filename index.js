@@ -8,6 +8,7 @@ const slug = require('slug');
 const mkdirp = require('mkdirp').sync;
 
 let typo3path = null;
+let typo3url = null;
 let app;
 
 /**
@@ -184,19 +185,18 @@ function processComponent(component) {
  */
 const update = function update(args, done) {
     app = this.fractal;
-    const t3path = args.typo3path || typo3path;
-    const typo3cli = path.join(t3path, 'typo3/cli_dispatch.phpsh');
+    const typo3cli = path.join(typo3path, 'typo3/cli_dispatch.phpsh');
 
     try {
         if (fs.statSync(typo3cli).isFile()) {
             const components = JSON.parse(
-                execFileSync('php', [path.resolve(t3path, 'typo3/cli_dispatch.phpsh'), 'extbase', 'component:discover']).toString());
+                execFileSync('php', [path.resolve(typo3path, 'typo3/cli_dispatch.phpsh'), 'extbase', 'component:discover']).toString());
             for (const component of components) {
                 processComponent(component);
             }
 
             // Write the general shared context
-            const context = { context: { typo3: path.resolve(t3path) } };
+            const context = { context: { typo3: typo3url } };
             fs.writeFileSync(path.resolve(app.components.get('path'), 'components.config.json'), JSON.stringify(context, null, 4));
         }
         done();
@@ -211,8 +211,9 @@ const update = function update(args, done) {
  *
  * @param {String} t3path TYPO3 default path
  */
-const configure = function configure(t3path) {
+const configure = function configure(t3path, t3url) {
     typo3path = t3path;
+    typo3url =  t3url;
 };
 
 /**
