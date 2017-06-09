@@ -213,17 +213,29 @@ const update = function update(args, done) {
  */
 const configure = function configure(t3path, t3url) {
     typo3path = t3path;
-    typo3url =  t3url;
+    typo3url = t3url;
 };
 
 /**
  * TYPO3 template rendering engine
  */
 class TYPO3Adapter extends Adapter {
+    /**
+     * Render a component
+     *
+     * @param {String} componentPath Component path
+     * @param {String} str Template string
+     * @param {Object} context Rendering context
+     * @return {Promise} Rendering promise
+     */
     render(componentPath, str, context) { // , meta
-        const views = {};
-        this.views.forEach(view => (views[view.handle] = view.content));
-        return Promise.resolve(this.engine.render(str, context, views));
+        if (context.component) {
+            const views = {};
+            this.views.forEach(view => (views[view.handle] = view.content));
+            return this.engine.compile(str, context, views);
+        }
+
+        return this.engine.handlebars.render(null, str, context);
     }
 }
 
@@ -238,7 +250,7 @@ const engine = function engine() {
             typo3Engine.handlebars = handlebars({}).register(source, gapp);
             typo3Engine.handlebars.load();
             return new TYPO3Adapter(typo3Engine, source); // , gapp
-        },
+        }
     };
 };
 
