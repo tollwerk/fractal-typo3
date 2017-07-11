@@ -6,10 +6,24 @@ const fs = require('fs');
 const execFileSync = require('child_process').execFileSync;
 const slug = require('slug');
 const mkdirp = require('mkdirp').sync;
+const chalk = require('chalk');
+const deleteEmpty = require('delete-empty');
 
+const files = [];
 let typo3path = null;
 let typo3url = null;
 let app;
+
+/**
+ * Write a file to disc
+ *
+ * @param {String} path File path
+ * @param {String} content File content
+ */
+function writeFile(file, content) {
+    fs.writeFileSync(file, content);
+    files.push(path.relative(app.components.get('path'), file));
+}
 
 /**
  * Configure a component
@@ -32,7 +46,6 @@ function configureComponent(configPath, component, componentPath) {
         }
 
         config.variants = config.variants || [];
-
     } catch (e) {
         config = {
             title: component.name,
@@ -63,7 +76,7 @@ function configureComponent(configPath, component, componentPath) {
             request: component.request,
             component: component.class,
         },
-        notes: component.notice || ''
+        notes: component.notice || '',
     });
 
     config.variants = config.variants.sort((a, b) => {
@@ -74,10 +87,12 @@ function configureComponent(configPath, component, componentPath) {
         }
         return (aName < bName) ? -1 : 0;
     });
-    config.variants.forEach((v, i) => v.order = i);
+    config.variants.forEach((v, i) => {
+        config.variants[i].order = i;
+    });
 
     // Write the configuration file
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 4));
+    writeFile(configPath, JSON.stringify(config, null, 4));
 }
 
 /**
@@ -90,8 +105,6 @@ function configureComponent(configPath, component, componentPath) {
 function createCollection(dirPrefix, dirPath) {
     const dir = dirPath.shift();
     const absDir = path.join(dirPrefix, dir);
-
-    console.log('Creating ' + absDir);
 
     // Create the collection directory
     try {
@@ -118,7 +131,7 @@ function createCollection(dirPrefix, dirPath) {
     } catch (e) {
         config = { prefix };
     }
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 4));
+    writeFile(configPath, JSON.stringify(config, null, 4));
 
     // Recurse
     return dirPath.length ? createCollection(absDir, dirPath) : true;
@@ -143,11 +156,11 @@ function registerComponent(component) {
     // Write out the template file
     const componentVariantName = componentName + (component.variant ? `--${slug(component.variant, { lower: true })}` : '');
     const componentTemplate = path.join(componentDirectory, `${componentVariantName}.${component.extension}`);
-    fs.writeFileSync(componentTemplate, component.template);
+    writeFile(componentTemplate, component.template);
 
     // Write out the preview template
     if (component.preview) {
-        fs.writeFileSync(path.join(componentParent, `_${componentName}-preview.t3s`), component.preview);
+        writeFile(path.join(componentParent, `_${componentName}-preview.t3s`), component.preview);
     }
 
     // Configure the component
@@ -169,11 +182,11 @@ function processComponent(component) {
 
     // If the component is invalid
     if (!component.valid) {
-        console.log(`Skipping invalid component: ${pathName.join('/')}`);
+        console.log(`${chalk.bold.red('X')} ${pathName.join('/')}`);
         return;
     }
 
-    console.log(`Creating component: ${pathName.join('/')}`);
+    console.log(`${chalk.green('√')} ${pathName.join('/')}`);
     registerComponent(component);
 }
 
@@ -189,15 +202,32 @@ const update = function update(args, done) {
 
     try {
         if (fs.statSync(typo3cli).isFile()) {
-            const components = JSON.parse(
-                execFileSync('php', [path.resolve(typo3path, 'typo3/cli_dispatch.phpsh'), 'extbase', 'component:discover']).toString());
+            const componentsJSON = execFileSync('php', [path.resolve(typo3path, 'typo3/cli_dispatch.phpsh'), 'extbase', 'component:discover']).toString();
+            const components = JSON.parse(componentsJSON);
             for (const component of components) {
                 processComponent(component);
             }
 
             // Write the general shared context
             const context = { context: { typo3: typo3url } };
-            fs.writeFileSync(path.resolve(app.components.get('path'), 'components.config.json'), JSON.stringify(context, null, 4));
+            writeFile(path.resolve(app.components.get('path'), 'components.config.json'), JSON.stringify(context, null, 4));
+
+            // See if there's a component file manifest
+            const manifest = path.resolve(app.components.get('path'), 'components.files.json');
+            try {
+                if (fs.statSync(manifest).isFile()) {
+                    const currentFiles = new Set(files);
+                    const prevFiles = new Set(JSON.parse(fs.readFileSync(manifest)));
+
+                    // Delete all redundant files
+                    [...prevFiles].filter(f => !currentFiles.has(f)).forEach(f => fs.unlinkSync(path.resolve(app.components.get('path'), f)));
+                }
+            } catch (e) {
+                // Ignore errors
+            } finally {
+                writeFile(manifest, JSON.stringify(files));
+                deleteEmpty.sync(app.components.get('path'));
+            }
         }
         done();
     } catch (e) {
@@ -250,7 +280,7 @@ const engine = function engine() {
             typo3Engine.handlebars = handlebars({}).register(source, gapp);
             typo3Engine.handlebars.load();
             return new TYPO3Adapter(typo3Engine, source); // , gapp
-        }
+        },
     };
 };
 
