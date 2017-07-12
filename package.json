@@ -1,44 +1,51 @@
 {
-  "name": "fractal-typo3",
-  "version": "0.3.0",
-  "author": "Joschi Kuphal <joschi@kuphal.net> (https://jkphl.is)",
-  "description": "TYPO3 component library adapter for Fractal",
-  "homepage": "https://github.com/tollwerk/fractal-typo3",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/tollwerk/fractal-typo3.git"
-  },
-  "license": "MIT",
-  "engines": {
-    "node": ">= 4.0"
-  },
-  "main": "index.js",
-  "scripts": {
-    "lint": "eslint **/*.js"
-  },
-  "files": [
-    "lib",
-    "res"
-  ],
-  "keywords": [
-    "fractal",
-    "component"
-  ],
-  "dependencies": {
-    "@frctl/fractal": "^1.1.4",
-    "@frctl/handlebars": "^1.1.4",
-    "chalk": "^2.0.1",
-    "delete-empty": "^1.0.1",
-    "mkdirp": "^0.5.1",
-    "request": "^2.81.0",
-    "request-promise": "^4.2.1",
-    "slug": "^0.9.1"
-  },
-  "devDependencies": {
-    "eslint": "^4.2.0",
-    "eslint-config-airbnb": "^15.0.2",
-    "eslint-plugin-import": "^2.7.0",
-    "eslint-plugin-jsx-a11y": "6.0.2",
-    "eslint-plugin-react": "^7.1.0"
-  }
+    "name": "fractal-typo3",
+    "version": "0.2.2",
+    "author": "Joschi Kuphal <joschi@kuphal.net> (https://jkphl.is)",
+    "description": "TYPO3 bridge for the Fractal component library tool",
+    "homepage": "https://github.com/tollwerk/fractal-typo3",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tollwerk/fractal-typo3.git"
+    },
+    "license": "MIT",
+    "engines": {
+        "node": ">= 4.0"
+    },
+    "main": "index.js",
+    "scripts": {
+        "lint": "eslint **/*.js"
+    },
+    "files": [
+        "docs",
+        "lib",
+        "res"
+    ],
+    "keywords": [
+        "fractal",
+        "fractal-adapter",
+        "fractal-plugin",
+        "frctl",
+        "typo3",
+        "fluid",
+        "extbase",
+        "typoscript"
+    ],
+    "dependencies": {
+        "@frctl/fractal": "^1.1.4",
+        "@frctl/handlebars": "^1.1.4",
+        "chalk": "^2.0.1",
+        "delete-empty": "^1.0.1",
+        "mkdirp": "^0.5.1",
+        "request": "^2.81.0",
+        "request-promise": "^4.2.1",
+        "slug": "^0.9.1"
+    },
+    "devDependencies": {
+        "eslint": "^4.2.0",
+        "eslint-config-airbnb": "^15.0.2",
+        "eslint-plugin-import": "^2.7.0",
+        "eslint-plugin-jsx-a11y": "6.0.2",
+        "eslint-plugin-react": "^7.1.0"
+    }
 }
