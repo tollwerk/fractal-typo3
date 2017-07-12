@@ -1,4 +1,4 @@
-# fractal-typo3
+# fractal-typo3 [![NPM version][npm-image]][npm-url] [![NPM downloads][npm-downloads]][npm-url] [![Dependency Status][depstat-image]][depstat-url] [![Development Dependency Status][devdepstat-image]][devdepstat-url]
 
 > TYPO3 bridge for the Fractal component library tool (http://fractal.build / @frctl)
 
@@ -98,4 +98,18 @@ License
 
 Copyright © 2017 [Joschi Kuphal][author-url] / joschi@kuphal.net. Licensed under the terms of the [MIT license](LICENSE.txt).
 
-[author-url]: https://jkphl.is
+[author-url]: https://tollwerk.is
+[npm-url]: https://npmjs.org/package/fractal-typo3
+[npm-image]: https://badge.fury.io/js/fractal-typo3.svg
+[npm-downloads]: https://img.shields.io/npm/dm/fractal-typo3.svg
+
+[travis-url]: http://travis-ci.org/tollwerk/fractal-typo3
+[travis-image]: https://secure.travis-ci.org/tollwerk/fractal-typo3.svg
+
+[coveralls-url]: https://coveralls.io/r/tollwerk/fractal-typo3
+[coveralls-image]: https://img.shields.io/coveralls/tollwerk/fractal-typo3.svg
+
+[depstat-url]: https://david-dm.org/tollwerk/fractal-typo3#info=dependencies
+[depstat-image]: https://david-dm.org/tollwerk/fractal-typo3.svg
+[devdepstat-url]: https://david-dm.org/tollwerk/fractal-typo3#info=devDependencies
+[devdepstat-image]: https://david-dm.org/tollwerk/fractal-typo3/dev-status.svg
