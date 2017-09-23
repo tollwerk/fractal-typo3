@@ -76,7 +76,6 @@ function configureComponent(configPath, component, componentPath) {
             request: component.request,
             component: component.class,
         },
-        notes: component.notice || '',
     });
 
     config.variants = config.variants.sort((a, b) => {
@@ -93,6 +92,12 @@ function configureComponent(configPath, component, componentPath) {
 
     // Write the configuration file
     writeFile(configPath, JSON.stringify(config, null, 4));
+
+    // If there's a component note
+    if ((variant === 'default') && component.notice) {
+        const readme = path.join(path.dirname(configPath), 'README.md');
+        writeFile(readme, component.notice);
+    }
 }
 
 /**
