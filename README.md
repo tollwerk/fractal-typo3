@@ -57,7 +57,7 @@ If you have [GraphViz](http://www.graphviz.org/) available on your server, you c
 
 ![Component dependency graph](docs/component-dependency-graph.jpg)
 
-To enable the "Graph" panel in Fractal, edit your `fractal.js` and pass a Fractal theme instance as third argument to the configuration method:
+To enable the **Graph panel** in Fractal, edit your `fractal.js` and pass a Fractal theme instance as third argument to the `typo3.configure()` method:
 
 ```js
 const path = require('path');
