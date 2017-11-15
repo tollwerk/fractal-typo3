@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Updated dependencies
 - Support for an optional component graph panel
+- Compatible with with [TYPO3 component library extension](https://github.com/tollwerk/TYPO3-ext-tw_componentlibrary) v0.3.0)
 
 ## [0.2.4] - 2017-09-23
 
