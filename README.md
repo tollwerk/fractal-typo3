@@ -51,6 +51,26 @@ fractal.cli.command('update-typo3', typo3.update, {
 
 Make sure that your server knows how to resolve the absolute URL to your TYPO3 frontend. You might need to add an entry to your [hosts](https://en.wikipedia.org/wiki/Hosts_(file)) file for this to work under certain circumstances.
 
+### Component dependency graphs
+
+If you have [GraphViz](http://www.graphviz.org/) available on your server, you can enable an additional Fractal panel that will give you a dynamically created dependency graph for each component:
+
+![Component dependency graph](docs/component-dependency-graph.jpg)
+
+To enable the "Graph" panel in Fractal, edit your `fractal.js` and pass a Fractal theme instance as third argument to the configuration method:
+
+```js
+const path = require('path');
+const fractal = module.exports = require('@frctl/fractal').create();
+const typo3 = require('fractal-typo3');
+
+// Create a custom theme and pass it to the configuration method
+const typo3Theme = require('@frctl/mandelbrot')();
+typo3.configure('web', 'http://example.com', typo3Theme);
+
+/* ... */
+````
+
 ### Component update with TYPO3
 
 Run the following command to synchronise with TYPO3 and build your component library:

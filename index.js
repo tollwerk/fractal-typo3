@@ -292,7 +292,7 @@ const configure = function configure(t3path, t3url, t3theme) {
     typo3url = t3url;
 
     // If a Fractal theme is given
-    if ((typeof t3theme === 'object') || (typeof t3theme.options === 'function')) {
+    if ((typeof t3theme === 'object') && (typeof t3theme.options === 'function')) {
         t3theme.addLoadPath(path.resolve(__dirname, 'lib', 'views'));
 
         // Add the graph panel
