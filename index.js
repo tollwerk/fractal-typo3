@@ -1,4 +1,4 @@
-/* eslint-disable global-require, import/no-dynamic-require, no-console */
+/* eslint-disable global-require, import/no-dynamic-require, no-console, no-underscore-dangle */
 
 const Adapter = require('@frctl/fractal').Adapter;
 const path = require('path');
@@ -8,6 +8,7 @@ const slug = require('slug');
 const mkdirp = require('mkdirp').sync;
 const chalk = require('chalk');
 const deleteEmpty = require('delete-empty');
+const url = require('url');
 
 const files = [];
 let typo3path = null;
@@ -242,13 +243,68 @@ const update = function update(args, done) {
 };
 
 /**
- * Configure the TYPO3 default path
+ * Encode an object as URI parameters
+ *
+ * @param {Object} params Parameter object
+ * @param {String} prefix Parameter prefix
+ * @return {Array} Encoded URI parameters
+ */
+const encodeURIParams = function encodeURIParams(params, prefix) {
+    let parts = [];
+    for (const name in params) {
+        if (Object.prototype.hasOwnProperty.call(params, name)) {
+            const paramName = prefix ? (`${prefix}[${encodeURIComponent(name)}]`) : encodeURIComponent(name);
+            if (typeof params[name] === 'object') {
+                parts = Array.prototype.concat.apply(parts,
+                    encodeURIParams(params[name], paramName));
+            } else {
+                parts.push(`${paramName}=${encodeURIComponent(params[name])}`);
+            }
+        }
+    }
+    return parts;
+};
+
+/**
+ * Create and return the graph URL for a particular component
+ *
+ * @param {Component} component Component
+ */
+const componentGraphUrl = function componentGraphUrl(component) {
+    const context = ('variants' in component) ? component.variants().default().context : component.context;
+    const graphUrl = url.parse(context.typo3);
+    graphUrl.search = `?${encodeURIParams(Object.assign(context.request.arguments, {
+        tx_twcomponentlibrary_component: { component: context.component },
+        type: 2401,
+    })).join('&')}`;
+    return url.format(graphUrl);
+};
+
+/**
+ * Configure the TYPO3 connection
  *
  * @param {String} t3path TYPO3 default path
+ * @param {String} t3url TYPO3 base URL
+ * @param {Theme} t3theme TYPO3 theme
  */
-const configure = function configure(t3path, t3url) {
+const configure = function configure(t3path, t3url, t3theme) {
     typo3path = t3path;
     typo3url = t3url;
+
+    // If a Fractal theme is given
+    if ((typeof t3theme === 'object') || (typeof t3theme.options === 'function')) {
+        t3theme.addLoadPath(path.resolve(__dirname, 'lib', 'views'));
+
+        // Add the graph panel
+        const options = t3theme.options();
+        if (options.panels.indexOf('graph') < 0) {
+            options.panels.push('graph');
+        }
+        t3theme.options(options);
+        t3theme.addListener('init', (engine) => {
+            engine._engine.addFilter('componentGraphUrl', componentGraphUrl);
+        });
+    }
 };
 
 /**

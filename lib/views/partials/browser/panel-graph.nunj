@@ -1,0 +1,5 @@
+<div class="Browser-panel Browser-graph" data-role="tab-panel" id="browser-{{ entity.id }}-panel-graph">
+    <a href="{{ entity | componentGraphUrl }}" target="_blank" title="Open in new window">
+        <img src="{{ entity | componentGraphUrl }}" alt="Component graph for {{ entity.name }}" style="max-width:100%;height:auto"/>
+    </a>
+</div>
