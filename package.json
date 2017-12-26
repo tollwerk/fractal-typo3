@@ -1,6 +1,6 @@
 {
     "name": "fractal-typo3",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "author": "Joschi Kuphal <joschi@kuphal.net> (https://jkphl.is)",
     "description": "TYPO3 bridge for the Fractal component library tool",
     "homepage": "https://github.com/tollwerk/fractal-typo3",
@@ -45,7 +45,7 @@
         "eslint": "^4.11.0",
         "eslint-config-airbnb": "^16.1.0",
         "eslint-plugin-import": "^2.8.0",
-        "eslint-plugin-jsx-a11y": "6.0.2",
+        "eslint-plugin-jsx-a11y": "6.0.3",
         "eslint-plugin-react": "^7.4.0"
     }
 }

@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - unreleased
+
+### Changed
+
+- Updated dependencies
+- Support for TYPO3 CMS v9.0
+- Support for manual directory sorting
+- Compatible with with [TYPO3 component library extension](https://github.com/tollwerk/TYPO3-ext-tw_componentlibrary) v0.4.0)
+
 ## [0.3.0] - 2017-11-15
 
 ### Changed

@@ -13,6 +13,7 @@ const url = require('url');
 const files = [];
 let typo3path = null;
 let typo3url = null;
+let typo3bin = false;
 let app;
 
 /**
@@ -150,7 +151,17 @@ function createCollection(dirPrefix, dirPath) {
  */
 function registerComponent(component) {
     const componentName = slug(component.name, { lower: true });
-    const componentPath = component.path.slice(0).map(p => slug(p, { lower: true }));
+    const componentLocalConfig = (component.local instanceof Array) ? component.local : [];
+    while (componentLocalConfig.length < component.path.length) {
+        componentLocalConfig.push([]);
+    }
+    const componentPath = component.path.slice(0).map((p, i) => {
+        let pslug = slug(p, { lower: true });
+        if (componentLocalConfig[i].dirsort) {
+            pslug = `${(new String(componentLocalConfig[i].dirsort)).padStart(2, '0')}-${pslug}`;
+        }
+        return pslug;
+    });
     const componentParent = path.join(app.components.get('path'), ...componentPath);
     const componentDirectory = path.join(componentParent, componentName);
 
@@ -204,11 +215,21 @@ function processComponent(component) {
  */
 const update = function update(args, done) {
     app = this.fractal;
-    const typo3cli = path.join(typo3path, 'typo3/cli_dispatch.phpsh');
+
+    let typo3cli = path.join(typo3path, '../vendor/bin/typo3');
+    let typo3args = ['extbase', 'component:discover'];
+    try {
+        if (fs.statSync(typo3cli).isFile()) {
+            typo3args.shift();
+        }
+    } catch (e) {
+        typo3cli = path.join(typo3path, 'typo3/cli_dispatch.phpsh');
+    }
 
     try {
         if (fs.statSync(typo3cli).isFile()) {
-            const componentsJSON = execFileSync('php', [path.resolve(typo3path, 'typo3/cli_dispatch.phpsh'), 'extbase', 'component:discover']).toString();
+            typo3args.unshift(typo3cli);
+            const componentsJSON = execFileSync('php', typo3args).toString();
             const components = JSON.parse(componentsJSON);
             for (const component of components) {
                 processComponent(component);
