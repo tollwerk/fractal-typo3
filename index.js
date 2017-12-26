@@ -129,8 +129,8 @@ function createCollection(dirPrefix, dirPath) {
     }
 
     // Configure the collection prefix
-    const configPath = path.join(absDir, `${dir}.config.json`);
-    const prefix = path.relative(app.components.get('path'), absDir).split(path.sep).join('-');
+    const configPath = path.join(absDir, `${dir.replace(/^\d{2}-/, '')}.config.json`);
+    const prefix = path.relative(app.components.get('path'), absDir).split(path.sep).map(p => p.replace(/^\d{2}-/, '')).join('-');
     let config;
     try {
         config = require(configPath);
@@ -155,18 +155,16 @@ function registerComponent(component) {
     while (componentLocalConfig.length < component.path.length) {
         componentLocalConfig.push([]);
     }
-    const componentPath = component.path.slice(0).map((p, i) => {
-        let pslug = slug(p, { lower: true });
-        if (componentLocalConfig[i].dirsort) {
-            pslug = `${(new String(componentLocalConfig[i].dirsort)).padStart(2, '0')}-${pslug}`;
-        }
-        return pslug;
+    const componentPath = component.path.slice(0).map(p => slug(p, { lower: true }));
+    const componentRealPath = componentPath.map((p, i) => {
+        return componentLocalConfig[i].dirsort ?
+            `${(new String(componentLocalConfig[i].dirsort)).padStart(2, '0')}-${p}` : p;
     });
-    const componentParent = path.join(app.components.get('path'), ...componentPath);
+    const componentParent = path.join(app.components.get('path'), ...componentRealPath);
     const componentDirectory = path.join(componentParent, componentName);
 
     // Create the component directory
-    if (!createCollection(app.components.get('path'), [...componentPath, componentName])) {
+    if (!createCollection(app.components.get('path'), [...componentRealPath, componentName])) {
         throw new Error(`Could not create component directory ${componentDirectory}`);
     }
 
