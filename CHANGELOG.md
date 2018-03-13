@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Support for TYPO3 CMS v9.0
 - Support for manual directory sorting
 - Compatible with with [TYPO3 component library extension](https://github.com/tollwerk/TYPO3-ext-tw_componentlibrary) v0.4.0)
+- Support for custom directory labels
 
 ## [0.3.0] - 2017-11-15
 

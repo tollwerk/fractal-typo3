@@ -107,10 +107,12 @@ function configureComponent(configPath, component, componentPath) {
  *
  * @param {String} dirPrefix Path prefix
  * @param {Array} dirPath Directory path
+ * @param {Array} dirConfigs Local directory configurations
  * @return {boolean} Directory been created and pre-configured
  */
-function createCollection(dirPrefix, dirPath) {
+function createCollection(dirPrefix, dirPath, dirConfigs) {
     const dir = dirPath.shift();
+    const dirConfig = dirConfigs.shift() || {};
     const absDir = path.join(dirPrefix, dir);
 
     // Create the collection directory
@@ -131,6 +133,9 @@ function createCollection(dirPrefix, dirPath) {
     // Configure the collection prefix
     const configPath = path.join(absDir, `${dir.replace(/^\d{2}-/, '')}.config.json`);
     const prefix = path.relative(app.components.get('path'), absDir).split(path.sep).map(p => p.replace(/^\d{2}-/, '')).join('-');
+
+    // console.log(configPath, dirConfig);
+
     let config;
     try {
         config = require(configPath);
@@ -138,10 +143,16 @@ function createCollection(dirPrefix, dirPath) {
     } catch (e) {
         config = { prefix };
     }
+    ['label'].forEach(c => {
+        if (c in dirConfig) {
+            config[c] = dirConfig[c];
+        }
+    })
+    console.log(config);
     writeFile(configPath, JSON.stringify(config, null, 4));
 
     // Recurse
-    return dirPath.length ? createCollection(absDir, dirPath) : true;
+    return dirPath.length ? createCollection(absDir, dirPath, dirConfigs) : true;
 }
 
 /**
@@ -150,6 +161,7 @@ function createCollection(dirPrefix, dirPath) {
  * @param {Object} component Component
  */
 function registerComponent(component) {
+    console.log(component);
     const componentName = slug(component.name, { lower: true });
     const componentLocalConfig = (component.local instanceof Array) ? component.local : [];
     while (componentLocalConfig.length < component.path.length) {
@@ -164,7 +176,7 @@ function registerComponent(component) {
     const componentDirectory = path.join(componentParent, componentName);
 
     // Create the component directory
-    if (!createCollection(app.components.get('path'), [...componentRealPath, componentName])) {
+    if (!createCollection(app.components.get('path'), [...componentRealPath, componentName], componentLocalConfig)) {
         throw new Error(`Could not create component directory ${componentDirectory}`);
     }
 
