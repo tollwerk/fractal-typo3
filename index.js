@@ -4,7 +4,7 @@ const Adapter = require('@frctl/fractal').Adapter;
 const path = require('path');
 const fs = require('fs');
 const execFileSync = require('child_process').execFileSync;
-const slug = require('slug');
+const dashify = require('dashify');
 const mkdirp = require('mkdirp').sync;
 const chalk = require('chalk');
 const deleteEmpty = require('delete-empty');
@@ -61,7 +61,7 @@ function configureComponent(configPath, component, componentPath) {
 
     // Register the preview component
     if (component.preview) {
-        config.preview = `@${[...componentPath, slug(component.name, { lower: true }), 'preview'].join('-')}`;
+        config.preview = `@${[...componentPath, dashify(component.name), 'preview'].join('-')}`;
     }
 
     // Remove the variant if already present
@@ -134,8 +134,6 @@ function createCollection(dirPrefix, dirPath, dirConfigs) {
     const configPath = path.join(absDir, `${dir.replace(/^\d{2}-/, '')}.config.json`);
     const prefix = path.relative(app.components.get('path'), absDir).split(path.sep).map(p => p.replace(/^\d{2}-/, '')).join('-');
 
-    // console.log(configPath, dirConfig);
-
     let config;
     try {
         config = require(configPath);
@@ -148,7 +146,6 @@ function createCollection(dirPrefix, dirPath, dirConfigs) {
             config[c] = dirConfig[c];
         }
     })
-    console.log(config);
     writeFile(configPath, JSON.stringify(config, null, 4));
 
     // Recurse
@@ -161,13 +158,12 @@ function createCollection(dirPrefix, dirPath, dirConfigs) {
  * @param {Object} component Component
  */
 function registerComponent(component) {
-    console.log(component);
-    const componentName = slug(component.name, { lower: true });
+    const componentName = dashify(component.name);
     const componentLocalConfig = (component.local instanceof Array) ? component.local : [];
     while (componentLocalConfig.length < component.path.length) {
         componentLocalConfig.push([]);
     }
-    const componentPath = component.path.slice(0).map(p => slug(p, { lower: true }));
+    const componentPath = component.path.slice(0).map(p => dashify(p));
     const componentRealPath = componentPath.map((p, i) => {
         return componentLocalConfig[i].dirsort ?
             `${(new String(componentLocalConfig[i].dirsort)).padStart(2, '0')}-${p}` : p;
@@ -181,7 +177,7 @@ function registerComponent(component) {
     }
 
     // Write out the template file
-    const componentVariantName = componentName + (component.variant ? `--${slug(component.variant, { lower: true })}` : '');
+    const componentVariantName = componentName + (component.variant ? `--${dashify(component.variant)}` : '');
     const componentTemplate = path.join(componentDirectory, `${componentVariantName}.${component.extension}`);
     writeFile(componentTemplate, component.template);
 

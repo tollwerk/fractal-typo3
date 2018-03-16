@@ -71,7 +71,7 @@ typo3.configure('web', 'http://example.com', typo3Theme);
 /* ... */
 ````
 
-### Component update with TYPO3
+### Component update against TYPO3
 
 Run the following command to synchronise with TYPO3 and build your component library:
 
@@ -97,6 +97,18 @@ Please restart your Fractal server in case the Web UI doesn't reflect the change
 
 Instead of displaying pre-rendered results, Fractal uses TYPO3 as real-time template engine for rendering your TYPO3 components on demand, hence the short rendering delay.
 
+#### Local component folder configuration
+
+You can configure some select properties of your Fractal component folders by placing a `local.json` file into the corresponding directory of your component definition directory structure in TYPO3. The following options are supported:
+
+```json
+{
+    "dirsort": 1, // Used to order directories other than alphabetically
+    "label": "Icons & images" // Custom folder name not attainable via real directory name, e.g. including special characters
+}
+```
+
+
 Contributing
 ------------
 
@@ -116,7 +128,7 @@ Credits
 License
 -------
 
-Copyright © 2017 [Joschi Kuphal][author-url] / joschi@kuphal.net. Licensed under the terms of the [MIT license](LICENSE.txt).
+Copyright © 2018 [Joschi Kuphal][author-url] / joschi@kuphal.net. Licensed under the terms of the [MIT license](LICENSE.txt).
 
 [author-url]: https://tollwerk.is
 [npm-url]: https://npmjs.org/package/fractal-typo3

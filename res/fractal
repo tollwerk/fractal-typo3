@@ -1,5 +1,5 @@
 #!/sbin/openrc-run
-# Copyright 2017 Joschi Kuphal <joschi@kuphal.net>
+# Copyright 2018 Joschi Kuphal <joschi@kuphal.net>
 # Distributed under the terms of the MIT license
 #
 # OpenRC init script for Fractal development servers (http://fractal.build)

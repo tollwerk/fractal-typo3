@@ -35,14 +35,14 @@
         "@frctl/fractal": "^1.1.7",
         "@frctl/handlebars": "^1.1.4",
         "chalk": "^2.3.2",
+        "dashify": "^1.0.0",
         "delete-empty": "^2.0.0",
         "mkdirp": "^0.5.1",
         "request": "^2.85.0",
-        "request-promise": "^4.2.2",
-        "slug": "^0.9.1"
+        "request-promise": "^4.2.2"
     },
     "devDependencies": {
-        "eslint": "^4.18.2",
+        "eslint": "^4.19.0",
         "eslint-config-airbnb": "^16.1.0",
         "eslint-plugin-import": "^2.9.0",
         "eslint-plugin-jsx-a11y": "6.0.3",
