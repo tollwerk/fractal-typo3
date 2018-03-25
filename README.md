@@ -36,6 +36,15 @@ typo3.configure('web', 'http://example.com');
 // Configure Fractal's component base directory
 fractal.components.set('path', path.join(__dirname, 'fractal', 'components'));
 
+// Add a "TBD" component status label
+fractal.components.set('statuses', Object.assign({
+    tbd: {
+        label: 'TBD',
+        description: 'Planned but not yet started. Go ahead! :)',
+        color: '#CCCCCC'
+    }
+}, fractal.components.get('statuses')));
+
 // Set the directory for static assets to your TYPO3 root directory
 fractal.web.set('static.path', path.join(__dirname, 'web'));
 
