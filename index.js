@@ -265,7 +265,7 @@ const update = function update(args, done) {
         done();
     } catch (e) {
         console.log(e);
-        done(e);
+        process.exit(1);
     }
 };
 
