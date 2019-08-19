@@ -1,25 +1,24 @@
 /* eslint-disable global-require, import/no-dynamic-require, no-console, no-underscore-dangle */
 
-const Adapter = require('@frctl/fractal').Adapter;
+const { Adapter } = require('@frctl/fractal');
 const path = require('path');
 const fs = require('fs');
-const execFileSync = require('child_process').execFileSync;
 const dashify = require('dashify');
 const mkdirp = require('mkdirp').sync;
 const chalk = require('chalk');
 const deleteEmpty = require('delete-empty');
 const url = require('url');
+const request = require('request-promise');
 
 const files = [];
-let typo3path = null;
 let typo3url = null;
-let typo3bin = false;
 let app;
+let logger;
 
 /**
  * Write a file to disc
  *
- * @param {String} path File path
+ * @param {String} file File path
  * @param {String} content File content
  */
 function writeFile(file, content) {
@@ -66,7 +65,7 @@ function configureComponent(configPath, component, componentPath) {
 
     // Remove the variant if already present
     const variant = component.variant || 'default';
-    config.variants = config.variants.filter(vt => vt.name !== variant);
+    config.variants = config.variants.filter((vt) => vt.name !== variant);
 
     // Register the variant
     config.variants.push({
@@ -132,7 +131,7 @@ function createCollection(dirPrefix, dirPath, dirConfigs) {
 
     // Configure the collection prefix
     const configPath = path.join(absDir, `${dir.replace(/^\d{2}-/, '')}.config.json`);
-    const prefix = path.relative(app.components.get('path'), absDir).split(path.sep).map(p => p.replace(/^\d{2}-/, '')).join('-');
+    const prefix = path.relative(app.components.get('path'), absDir).split(path.sep).map((p) => p.replace(/^\d{2}-/, '')).join('-');
 
     let config;
     try {
@@ -141,11 +140,11 @@ function createCollection(dirPrefix, dirPath, dirConfigs) {
     } catch (e) {
         config = { prefix };
     }
-    ['label'].forEach(c => {
+    ['label'].forEach((c) => {
         if (c in dirConfig) {
             config[c] = dirConfig[c];
         }
-    })
+    });
     writeFile(configPath, JSON.stringify(config, null, 4));
 
     // Recurse
@@ -163,11 +162,9 @@ function registerComponent(component) {
     while (componentLocalConfig.length < component.path.length) {
         componentLocalConfig.push([]);
     }
-    const componentPath = component.path.slice(0).map(p => dashify(p));
-    const componentRealPath = componentPath.map((p, i) => {
-        return componentLocalConfig[i].dirsort ?
-            `${(new String(componentLocalConfig[i].dirsort)).padStart(2, '0')}-${p}` : p;
-    });
+    const componentPath = component.path.slice(0).map((p) => dashify(p));
+    const componentRealPath = componentPath.map((p, i) => (componentLocalConfig[i].dirsort
+        ? `${String.prototype.padStart.apply(componentLocalConfig[i].dirsort, [2, '0'])}-${p}` : p));
     const componentParent = path.join(app.components.get('path'), ...componentRealPath);
     const componentDirectory = path.join(componentParent, componentName);
 
@@ -196,7 +193,7 @@ function registerComponent(component) {
  * @param {Object} component Component
  */
 function processComponent(component) {
-    let name = component.name;
+    let { name } = component;
     if (component.variant) {
         name += ` (${component.variant})`;
     }
@@ -205,11 +202,11 @@ function processComponent(component) {
 
     // If the component is invalid
     if (!component.valid) {
-        console.log(`${chalk.bold.red('X')} ${pathName.join('/')}`);
+        logger.log(`${chalk.bold.red('X')} ${pathName.join('/')}`);
         return;
     }
 
-    console.log(`${chalk.green('√')} ${pathName.join('/')}`);
+    logger.log(`${chalk.green('√')} ${pathName.join('/')}`);
     registerComponent(component);
 }
 
@@ -221,52 +218,39 @@ function processComponent(component) {
  */
 const update = function update(args, done) {
     app = this.fractal;
-
-    let typo3cli = path.join(typo3path, '../vendor/bin/typo3');
-    let typo3args = ['extbase', 'component:discover'];
-    try {
-        if (fs.statSync(typo3cli).isFile()) {
-            typo3args.shift();
+    request({
+        uri: typo3url,
+        qs: { type: 2402 },
+        json: true,
+    }).then((components) => {
+        for (const component of components) {
+            processComponent(component);
         }
-    } catch (e) {
-        typo3cli = path.join(typo3path, 'typo3/cli_dispatch.phpsh');
-    }
 
-    try {
-        if (fs.statSync(typo3cli).isFile()) {
-            typo3args.unshift(typo3cli);
-            const componentsJSON = execFileSync('php', typo3args).toString();
-            const components = JSON.parse(componentsJSON);
-            for (const component of components) {
-                processComponent(component);
+        // Write the general shared context
+        const context = { context: { typo3: typo3url } };
+        writeFile(path.resolve(app.components.get('path'), 'components.config.json'), JSON.stringify(context, null, 4));
+
+        // See if there's a component file manifest
+        const manifest = path.resolve(app.components.get('path'), 'components.files.json');
+        try {
+            if (fs.statSync(manifest).isFile()) {
+                const currentFiles = new Set(files);
+                const prevFiles = new Set(JSON.parse(fs.readFileSync(manifest)));
+
+                // Delete all redundant files
+                [...prevFiles].filter((f) => !currentFiles.has(f)).forEach((f) => fs.unlinkSync(path.resolve(app.components.get('path'), f)));
             }
-
-            // Write the general shared context
-            const context = { context: { typo3: typo3url } };
-            writeFile(path.resolve(app.components.get('path'), 'components.config.json'), JSON.stringify(context, null, 4));
-
-            // See if there's a component file manifest
-            const manifest = path.resolve(app.components.get('path'), 'components.files.json');
-            try {
-                if (fs.statSync(manifest).isFile()) {
-                    const currentFiles = new Set(files);
-                    const prevFiles = new Set(JSON.parse(fs.readFileSync(manifest)));
-
-                    // Delete all redundant files
-                    [...prevFiles].filter(f => !currentFiles.has(f)).forEach(f => fs.unlinkSync(path.resolve(app.components.get('path'), f)));
-                }
-            } catch (e) {
-                // Ignore errors
-            } finally {
-                writeFile(manifest, JSON.stringify(files));
-                deleteEmpty.sync(app.components.get('path'));
-            }
+        } catch (e) {
+            // Ignore errors
+        } finally {
+            writeFile(manifest, JSON.stringify(files));
+            deleteEmpty.sync(app.components.get('path'));
         }
-        done();
-    } catch (e) {
-        console.log(e);
+    }).then(done).catch((err) => {
+        logger.log(err);
         process.exit(1);
-    }
+    });
 };
 
 /**
@@ -310,13 +294,16 @@ const componentGraphUrl = function componentGraphUrl(component) {
 /**
  * Configure the TYPO3 connection
  *
- * @param {String} t3path TYPO3 default path
  * @param {String} t3url TYPO3 base URL
  * @param {Theme} t3theme TYPO3 theme
+ * @param {Object} customLogger Customer logger
  */
-const configure = function configure(t3path, t3url, t3theme) {
-    typo3path = t3path;
+const configure = function configure(t3url, t3theme, customLogger) {
     typo3url = t3url;
+    logger = customLogger || console;
+    if (!logger.log) {
+        throw new Error('Make sure the logger has a log() method');
+    }
 
     // If a Fractal theme is given
     if ((typeof t3theme === 'object') && (typeof t3theme.options === 'function')) {
@@ -349,7 +336,9 @@ class TYPO3Adapter extends Adapter {
     render(componentPath, str, context) { // , meta
         if (context.component) {
             const views = {};
-            this.views.forEach(view => (views[view.handle] = view.content));
+            this.views.forEach((view) => {
+                views[view.handle] = view.content;
+            });
             return this.engine.compile(str, context, views);
         }
 
