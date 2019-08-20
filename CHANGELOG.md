@@ -9,11 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - Add a "TBD" status definition to sample configuration
+- Add development component support
 
 ### Changed
 
-- Updated dependencies
-- Switched to HTTP request based component update
+- Update dependencies
+- Switch to HTTP request based component update
+- Extend component context display
 
 ## [0.4.0] - 2018-03-16
 

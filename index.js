@@ -12,6 +12,7 @@ const request = require('request-promise');
 
 const files = [];
 let typo3url = null;
+let typo3dev = 0;
 let app;
 let logger;
 
@@ -53,6 +54,9 @@ function configureComponent(configPath, component, componentPath) {
             status: component.status,
             context: {
                 type: component.type,
+                component: component.class,
+                config: component.config,
+                resources: component.resources || [],
             },
             variants: [],
         };
@@ -213,14 +217,13 @@ function processComponent(component) {
 /**
  * Update the components by extracting them from a TYPO3 instance
  *
- * @param {Array} args Arguments
  * @return {Promise} Promise
  */
-const update = function update(args) {
+const update = function update() {
     app = this.fractal;
     return request({
         uri: typo3url,
-        qs: { type: 2402 },
+        qs: { type: 2402, tx_twcomponentlibrary_component: { dev: typo3dev } },
         json: true,
     }).then((components) => {
         for (const component of components) {
@@ -295,11 +298,13 @@ const componentGraphUrl = function componentGraphUrl(component) {
  * Configure the TYPO3 connection
  *
  * @param {String} t3url TYPO3 base URL
+ * @param {Boolean} t3dev Include development components
  * @param {Theme} t3theme TYPO3 theme
  * @param {Object} customLogger Customer logger
  */
-const configure = function configure(t3url, t3theme, customLogger) {
+const configure = function configure(t3url, t3dev, t3theme, customLogger) {
     typo3url = t3url;
+    typo3dev = t3dev ? 1 : 0;
     logger = customLogger || console;
     if (!logger.log) {
         throw new Error('Make sure the logger has a log() method');
