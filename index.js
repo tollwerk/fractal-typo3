@@ -202,11 +202,11 @@ function processComponent(component) {
 
     // If the component is invalid
     if (!component.valid) {
-        logger.log(`${chalk.bold.red('X')} ${pathName.join('/')}`);
+        logger.log(`${chalk.bold.red('X')} ${pathName.join('/')} (failed)`);
         return;
     }
 
-    logger.log(`${chalk.green('√')} ${pathName.join('/')}`);
+    logger.log(`${chalk.green('√')} ${pathName.join('/')} (succeeded)`);
     registerComponent(component);
 }
 
@@ -214,11 +214,11 @@ function processComponent(component) {
  * Update the components by extracting them from a TYPO3 instance
  *
  * @param {Array} args Arguments
- * @param {Function} done Callback
+ * @return {Promise} Promise
  */
-const update = function update(args, done) {
+const update = function update(args) {
     app = this.fractal;
-    request({
+    return request({
         uri: typo3url,
         qs: { type: 2402 },
         json: true,
@@ -247,7 +247,7 @@ const update = function update(args, done) {
             writeFile(manifest, JSON.stringify(files));
             deleteEmpty.sync(app.components.get('path'));
         }
-    }).then(done).catch((err) => {
+    }).catch((err) => {
         logger.log(err);
         process.exit(1);
     });
