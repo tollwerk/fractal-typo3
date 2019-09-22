@@ -15,6 +15,7 @@ let typo3url = null;
 let typo3dev = 0;
 let app;
 let logger;
+let componentCache;
 
 /**
  * Write a file to disc
@@ -36,8 +37,8 @@ function writeFile(file, content) {
  */
 function configureComponent(configPath, component, componentPath) {
     let config;
-    try {
-        config = require(configPath);
+    if (configPath in componentCache) {
+        config = componentCache[configPath];
 
         // If this is the default variant
         if (!component.variant) {
@@ -48,7 +49,7 @@ function configureComponent(configPath, component, componentPath) {
         }
 
         config.variants = config.variants || [];
-    } catch (e) {
+    } else {
         config = {
             title: component.name,
             status: component.status,
@@ -97,6 +98,7 @@ function configureComponent(configPath, component, componentPath) {
 
     // Write the configuration file
     writeFile(configPath, JSON.stringify(config, null, 4));
+    componentCache[configPath] = config;
 
     // If there's a component note
     if ((variant === 'default') && component.notice) {
@@ -221,6 +223,7 @@ function processComponent(component) {
  */
 const update = function update() {
     app = this.fractal;
+    componentCache = {};
     return request({
         uri: typo3url,
         qs: { type: 2402, tx_twcomponentlibrary_component: { dev: typo3dev } },
