@@ -1,7 +1,7 @@
 {
     "name": "fractal-typo3",
     "version": "1.0.0",
-    "author": "Joschi Kuphal <joschi@kuphal.net> (https://jkphl.is)",
+    "author": "Joschi Kuphal <joschi@tollwerk.de> (https://jkphl.is)",
     "description": "TYPO3 bridge for the Fractal component library tool",
     "homepage": "https://github.com/tollwerk/fractal-typo3",
     "repository": {
@@ -14,7 +14,7 @@
     },
     "main": "index.js",
     "scripts": {
-        "lint": "eslint **/*.js"
+        "lint": "eslint index.js lib/**/*.js"
     },
     "files": [
         "docs",
@@ -32,20 +32,20 @@
         "typoscript"
     ],
     "dependencies": {
-        "@frctl/fractal": "^1.1.7",
-        "@frctl/handlebars": "^1.1.5",
-        "chalk": "^2.4.2",
+        "@frctl/fractal": "^1.3.0",
+        "@frctl/handlebars": "^1.2.0",
+        "chalk": "^4.0.0",
         "dashify": "^2.0.0",
         "delete-empty": "^3.0.0",
-        "mkdirp": "^0.5.1",
-        "request": "^2.88.0",
-        "request-promise": "^4.2.4"
+        "mkdirp": "^1.0.4",
+        "request": "^2.88.2",
+        "request-promise": "^4.2.5"
     },
     "devDependencies": {
-        "eslint": "^6.2.1",
-        "eslint-config-airbnb": "^18.0.1",
-        "eslint-plugin-import": "^2.18.2",
+        "eslint": "^7.1.0",
+        "eslint-config-airbnb": "^18.1.0",
+        "eslint-plugin-import": "^2.20.2",
         "eslint-plugin-jsx-a11y": "6.2.3",
-        "eslint-plugin-react": "^7.14.3"
+        "eslint-plugin-react": "^7.20.0"
     }
 }

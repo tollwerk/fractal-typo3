@@ -126,7 +126,7 @@ Found a bug or have a feature request? [Please have a look at the known issues](
 Security
 --------
 
-If you discover any security related issues, please email joschi@kuphal.net instead of using the issue tracker.
+If you discover any security related issues, please email joschi@tollwerk.de instead of using the issue tracker.
 
 Credits
 -------
@@ -137,7 +137,7 @@ Credits
 License
 -------
 
-Copyright © 2018 [Joschi Kuphal][author-url] / joschi@kuphal.net. Licensed under the terms of the [MIT license](LICENSE.txt).
+Copyright © 2020 [Joschi Kuphal][author-url] / joschi@tollwerk.de. Licensed under the terms of the [MIT license](LICENSE.txt).
 
 [author-url]: https://tollwerk.is
 [npm-url]: https://npmjs.org/package/fractal-typo3
