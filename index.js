@@ -228,6 +228,7 @@ const update = function update() {
         uri: typo3url,
         qs: { type: 2402, tx_twcomponentlibrary_component: { dev: typo3dev } },
         json: true,
+        headers: { 'User-Agent': 'Fractal' },
     }).then((components) => {
         for (const component of components) {
             processComponent(component);
