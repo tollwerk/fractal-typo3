@@ -186,7 +186,7 @@ function registerComponent(component) {
 
     // Write out the preview template
     if (component.preview) {
-        writeFile(path.join(componentParent, `_${componentName}-preview.t3s`), component.preview);
+        writeFile(path.join(componentParent, `_${componentName}-preview.${component.extension}`), component.preview);
     }
 
     // Configure the component
